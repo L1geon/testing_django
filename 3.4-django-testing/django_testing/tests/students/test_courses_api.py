@@ -4,10 +4,10 @@ from model_bakery import baker
 from students.models import Course, Student
 
 
-
 @pytest.fixture()
 def client():
     return APIClient()
+
 
 @pytest.fixture
 def course_factory():
@@ -24,9 +24,9 @@ def student_factory():
 
     return factory
 
+
 @pytest.mark.django_db
 def test_get_cource(client, course_factory):
-
     # Arrange
     courses = course_factory()
     print(courses.id, courses.name)
@@ -42,7 +42,6 @@ def test_get_cource(client, course_factory):
 
 @pytest.mark.django_db
 def test_get_cources(client, course_factory):
-
     # Arrange
     quant = 999
     courses = course_factory(_quantity=quant)
@@ -59,23 +58,37 @@ def test_get_cources(client, course_factory):
 
 
 @pytest.mark.django_db
-def test_get_filter_cources(client, course_factory):
+def test_get_filter_cources_id(client, course_factory):
     # Arrange
     courses = course_factory(_quantity=9)
     i = 6
 
     # Act
-    response = client.get('/api/v1/courses/', {'id': courses[i].id, 'name': courses[i].name},)
+    response = client.get('/api/v1/courses/', {'id': courses[i].id, 'name': courses[i].name}, )
     print(response.json())
     # Assert
 
     assert response.status_code == 200
     assert courses[i].id == response.json()[0]['id']
+
+
+@pytest.mark.django_db
+def test_get_filter_cources_name(client, course_factory):
+    # Arrange
+    courses = course_factory(_quantity=20)
+    i = 6
+
+    # Act
+    response = client.get('/api/v1/courses/', {'id': courses[i].id, 'name': courses[i].name}, )
+    print(response.json())
+    # Assert
+
+    assert response.status_code == 200
     assert courses[i].name == response.json()[0]['name']
+
 
 @pytest.mark.django_db
 def test_create_course(client):
-
     # Arrange
     count = Course.objects.count()
     name = 'Python from zero'
@@ -91,16 +104,21 @@ def test_create_course(client):
 
 
 @pytest.mark.django_db
-def test_update_delete_course(client, course_factory):
-
+def test_update_course(client, course_factory):
     # Arrange
     courses = course_factory(_quantity=2)
     # Act
-    response_1 = client.patch(f'/api/v1/courses/{courses[0].id}/', data={'name': 'Python from zero'})
-    response_2 = client.delete(f'/api/v1/courses/{courses[1].id}/')
-    response_3 = client.get(f'/api/v1/courses/{courses[1].id}/')
+    response = client.patch(f'/api/v1/courses/{courses[0].id}/', data={'name': 'Python from zero'})
     # Assert
-    assert response_1.status_code == 200
-    assert response_2.status_code == 204
-    assert response_3.status_code == 404
+    assert response.status_code == 200
+    assert response.json()['name'] == 'Python from zero'
 
+
+@pytest.mark.django_db
+def test_delete_course(client, course_factory):
+    # Arrange
+    courses = course_factory(_quantity=2)
+    # Act
+    response = client.delete(f'/api/v1/courses/{courses[1].id}/')
+    # Assert
+    assert response.status_code == 204
